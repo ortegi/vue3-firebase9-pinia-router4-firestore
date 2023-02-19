@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, onActivated } from 'vue'
 import { auth } from '../firebaseConfig'
 import {useRouter} from 'vue-router'
+import {useDatabaseStore} from './database'
 export const useUserStore = defineStore('user', ()=>{
 
     const router = useRouter()
@@ -39,10 +40,13 @@ export const useUserStore = defineStore('user', ()=>{
     }
 
     const logOutUser = async () =>{
+        const dataBaseStore = useDatabaseStore()
+        dataBaseStore.$reset();
         try{
             await signOut(auth)
             userData.value = null
             router.push('/login')
+
         }catch(error){
             console.log(error)
         }
@@ -54,7 +58,9 @@ export const useUserStore = defineStore('user', ()=>{
                 if(user){
                     userData.value  = {email: user.email, uid: user.uid}
                 }else{
-                    userData.value = null
+                    userData.value = null;
+                    const dataBaseStore = useDatabaseStore()
+                    dataBaseStore.$reset();
                 }
                 resolve(user)
             }, e => reject(e))
