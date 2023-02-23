@@ -4,13 +4,13 @@ import { ref } from 'vue'
 import { db } from '../firebaseConfig'
 import { auth } from '../firebaseConfig'
 import { nanoid } from 'nanoid'
-import { async } from '@firebase/util'
 import { useRouter} from 'vue-router'
 
 export const useDatabaseStore = defineStore('dataBase', ()=>{
     const router = useRouter()
     const documents = ref([]);
     const loadingDoc = ref(false)
+    const loading = ref(false)
 
     const getUrls = async () =>{
         if(documents.value.length !== 0){
@@ -41,8 +41,8 @@ export const useDatabaseStore = defineStore('dataBase', ()=>{
     }
 
     const addUrl = async(name) =>{
+        loading.value = true
         try{
-
             const objectoDoc = {
                 name: name,
                 short : nanoid(6),
@@ -54,9 +54,10 @@ export const useDatabaseStore = defineStore('dataBase', ()=>{
                 id: docRef.id
             })
         }catch(error){
-            console.log(error)
+            console.log(error.code)
+            return error.code
         }finally{
-            
+            loading.value = false
         }
     }
 
@@ -81,6 +82,7 @@ export const useDatabaseStore = defineStore('dataBase', ()=>{
     }
 
     const updateUrl = async (id, name) =>{
+        loading.value = true
         try{
             const docRef = doc(db, "urls", id)
             const docSnap = await getDoc(docRef)
@@ -100,10 +102,15 @@ export const useDatabaseStore = defineStore('dataBase', ()=>{
             router.push('/')
         }catch(error){
             console.log(error)
+            return error.message
+        }finally{
+            loading.value = false
         }
     }
 
     const deleteUrl = async(id) =>{
+        loading.value = true
+
         try{    
             const docRef = doc(db, "urls", id)
             const docSnap = await getDoc(docRef)
@@ -117,9 +124,10 @@ export const useDatabaseStore = defineStore('dataBase', ()=>{
             await deleteDoc(docRef)
             documents.value = documents.value.filter(item => item.id !== id)
         }catch(error){
-            console.log(error.message)
+          //  console.log(error.code)
+            return error.code
         }finally{
-
+            loading.value = false
         }
     }
 
